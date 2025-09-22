@@ -66,3 +66,14 @@ To install all packages in one go:
 1. Run **PreProcessingDataTurismo.R** to build the cleaned dataset (`Data_Presenze.csv`) and pilot CSVs for QGIS.
 2. Run **Exposure_1.R** to verify the pilot exposure maps and aggregation logic.
 3. Run **Exposure_Full.R** to generate the full daily series, perform Functional PCA, and produce all figures used in the report.
+
+## Disclosure on AI Assistance
+
+This project was developed with the support of Artificial Intelligence (AI) tools.  
+AI was used for:
+- generating and refactoring R code,
+- improving code readability and documentation,
+- drafting and revising text (including this README).  
+
+All results, analyses, and interpretations were reviewed and validated by the author.
+
