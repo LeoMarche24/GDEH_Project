@@ -26,6 +26,7 @@ library(dplyr)
 library(fda)
 library(ggplot2)
 library(gridExtra)
+library(tidyr)
 
 #### Import Data ####
 presence_data <- read.csv("Data_Presenze.csv", sep = ",", dec = ",", header = TRUE)
@@ -147,7 +148,7 @@ df_exposure_long <- df_exposure %>%
 
 #### Plot with ggplot ####
 ggplot(df_exposure_long, aes(x = day, y = exposure, color = province, group = province)) +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
   geom_point(size = 2) +
   scale_x_date(breaks = key_dates,
                labels = format(key_dates, "%d-%b")) +
@@ -305,5 +306,9 @@ p2 <- ggplot(provinces_pca) +
   labs(title = "Functional PCA - PC2 Scores", fill = "PC2")
 
 grid.arrange(p1, p2, ncol = 2)
+
+p1
+
+p2
 
 #############################################
