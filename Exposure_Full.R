@@ -125,8 +125,22 @@ colors <- c(
   "#A52A2A"
 )
 
+colors <- c(
+  "Bergamo"   = "#FF8C00",
+  "Brescia"   = "#FF69B4",
+  "Como"      = "#FFD700",
+  "Cremona"   = "#2E8B57",
+  "Lecco"     = "#1E90FF",
+  "Lodi"      = "#228B22",
+  "Mantova"   = "#006400",
+  "Milano"    = "#6A0DAD",
+  "Monza e della Brianza"     = "#800020",
+  "Pavia"     = "#32CD32",
+  "Sondrio"   = "#87CEEB",
+  "Varese"    = "#A52A2A"
+)
 #### Key Dates for X-axis ####
-key_dates <- as.Date(c(min(days), "2021-12-25", "2022-01-06", max(days)))
+key_dates <- as.Date(c(min(days), "2021-12-19", "2021-12-25", "2022-01-01", "2022-01-06", max(days)))
 key_idx   <- match(key_dates, days)
 
 add_date_axis <- function() {
@@ -158,12 +172,18 @@ ggplot(df_exposure_long, aes(x = day, y = exposure, color = province, group = pr
   
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "right", legend.title = element_blank()
-  ) +
-  labs(y = "Exposure", x = NULL, title = "Exposure by Province")
+    legend.position = "bottom", legend.title = element_blank()
+  ) + 
+  ylab(NULL) +
+  xlab(NULL) +
+  #aumenta font sia della legenda che delle label
+  theme(
+    axis.text = element_text(size = 17),
+    legend.text = element_text(size = 17)
+  )
 
 #### Plot Users by Province ####
-x11()
+
 plot(1:length(days), users[1, ], type = "b", pch = 16, col = colors[1],
      ylim = c(min(users, na.rm = TRUE), max(users, na.rm = TRUE)),
      ylab = "Log(Unique Users)", xaxt = "n")
@@ -174,7 +194,7 @@ add_date_axis()
 legend("topright", legend = provinces$DEN_PRO, col = colors, pch = 16, cex = 0.7)
 
 #### Plot Pollution Proxy by Province ####
-x11()
+
 plot(1:length(days), pollution[1, ], type = "b", pch = 16, col = colors[1],
      ylim = c(min(pollution, na.rm = TRUE), max(pollution, na.rm = TRUE)),
      ylab = "Smoothed Field Average", xaxt = "n")
@@ -207,12 +227,37 @@ pca_exposure <- pca.fd(exposure_fd, nharm = 4)
 pca_exposure$scores[, 2] <- -pca_exposure$scores[, 2]
 
 #### Plot Scores (PC1 vs PC2) ####
-x11()
-plot(pca_exposure$scores[, 1], pca_exposure$scores[, 2],
-     xlab = "PC1", ylab = "PC2", pch = 16, col = colors,
-     main = "Scores Plot (PC1 vs PC2)")
-text(pca_exposure$scores[, 1], pca_exposure$scores[, 2],
-     labels = provinces$DEN_PRO, pos = 3, cex = 0.7)
+
+# Ordering of the provinces in the pca connected with colors
+
+
+
+plot(
+  pca_exposure$scores[, 1], pca_exposure$scores[, 2],
+  xlab = "PC1", ylab = "PC2",
+  pch = 16,
+  col = colors[provinces$DEN_PRO],  # usa la corrispondenza per nome
+  cex = 2,
+  cex.axis = 1.5,
+  cex.lab = 1.5,
+  ylim = c(-45, 45)
+)
+
+text(
+  pca_exposure$scores[, 1], pca_exposure$scores[, 2],
+  labels = provinces$DEN_PRO,
+  pos = c(4,2,3,2,4,4,2,3,2,4,2,3),
+  cex = 1.2
+)
+
+
+# Aggiungo tutte le etichette sopra ai punti
+text(
+  pca_exposure$scores[, 1], pca_exposure$scores[, 2],
+  labels = provinces$DEN_PRO,
+  pos = c(4,2,3,2,4,4,2,3,2,4,2,3),   # sopra
+  cex = 1.2  # testo   più grande
+)
 
 #### Evaluate mean and harmonics ####
 time_grid <- 1:length(days)
@@ -222,7 +267,7 @@ harm2_eval <- -eval.fd(time_grid, pca_exposure$harmonics[2])
 
 #### Build dataframe for PC1 ####
 df_pc1 <- data.frame(
-  day = as.Date(time_grid),
+  day = as.Date(days),
   mean = mean_eval,
   plus2sd = mean_eval + 2 * sqrt(pca_exposure$values[1]) * harm1_eval,
   minus2sd = mean_eval - 2 * sqrt(pca_exposure$values[1]) * harm1_eval
@@ -233,7 +278,9 @@ df_pc1_long <- df_pc1 %>%
 
 #### Plot PC1 ####
 p_pc1 <- ggplot(df_pc1_long, aes(x = day, y = value, color = curve, linetype = curve)) +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
+  scale_x_date(breaks = key_dates,
+               labels = format(key_dates, "%d-%b")) +
   scale_color_manual(values = c("mean" = "black",
                                 "mean.1" = "darkblue",
                                 "mean.2" = "darkred"),
@@ -242,14 +289,15 @@ p_pc1 <- ggplot(df_pc1_long, aes(x = day, y = value, color = curve, linetype = c
                                    "mean.1" = "dashed",
                                    "mean.2" = "dashed"),
                         labels = c("Mean", "+2SD (PC1)", "-2SD (PC1)")) +
-  labs(title = "Functional Mean ± 2SD (PC1)",
-       y = "Exposure", x = NULL) +
+  labs(y = NULL, x = NULL) +
   theme_minimal() +
-  theme(legend.title = element_blank())
+  theme(legend.position = 'none', axis.text.x = 
+          element_text(angle = 45, hjust = 1), axis.text = element_text(size = 17)
+  )
 
 #### Build dataframe for PC2 ####
 df_pc2 <- data.frame(
-  day = as.Date(time_grid),
+  day = as.Date(days),
   mean = mean_eval,
   plus2sd = mean_eval + 2 * sqrt(pca_exposure$values[2]) * harm2_eval,
   minus2sd = mean_eval - 2 * sqrt(pca_exposure$values[2]) * harm2_eval
@@ -260,7 +308,9 @@ df_pc2_long <- df_pc2 %>%
 
 #### Plot PC2 ####
 p_pc2 <- ggplot(df_pc2_long, aes(x = day, y = value, color = curve, linetype = curve)) +
-  geom_line(size = 1) +
+  geom_line(linewidth = 1) +
+  scale_x_date(breaks = key_dates,
+               labels = format(key_dates, "%d-%b")) +
   scale_color_manual(values = c("mean" = "black",
                                 "mean.1" = "darkblue",
                                 "mean.2" = "darkred"),
@@ -269,10 +319,11 @@ p_pc2 <- ggplot(df_pc2_long, aes(x = day, y = value, color = curve, linetype = c
                                    "mean.1" = "dashed",
                                    "mean.2" = "dashed"),
                         labels = c("Mean", "+2SD (PC2)", "-2SD (PC2)")) +
-  labs(title = "Functional Mean ± 2SD (PC2)",
-       y = "Exposure", x = NULL) +
+  labs(y = NULL, x = NULL) +
   theme_minimal() +
-  theme(legend.title = element_blank())
+  theme(legend.position = 'none', axis.text.x = 
+          element_text(angle = 45, hjust = 1), axis.text = element_text(size = 17)
+  )
 
 #### Print the plots ####
 
@@ -280,7 +331,7 @@ print(p_pc1)
 print(p_pc2)
 
 #### Plot Cumulative Variance Explained ####
-x11()
+
 plot(cumsum(pca_exposure$varprop), type = "b", pch = 16,
      ylab = "Cumulative Variance Explained", ylim = c(0, 1),
      main = "Variance Explained by Functional PCs", xaxt = "n")
@@ -292,18 +343,31 @@ provinces_pca <- provinces %>%
   mutate(PC1 = pca_exposure$scores[, 1],
          PC2 = pca_exposure$scores[, 2])
 
-x11()
 p1 <- ggplot(provinces_pca) +
-  geom_sf(aes(fill = PC1), color = "black", size = 0.3) +
+  geom_sf(aes(fill = PC1)) +
   scale_fill_viridis_c() +
   theme_minimal() +
-  labs(title = "Functional PCA - PC1 Scores", fill = "PC1")
+  theme(
+    legend.position = "none",             # togli la legenda se non ti serve
+    axis.text = element_blank(),          # togli etichette assi
+    axis.ticks = element_blank(),         # togli tacche assi
+    panel.grid.major = element_line(color = "transparent"),  # togli la griglia
+    panel.grid.minor = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
 
 p2 <- ggplot(provinces_pca) +
-  geom_sf(aes(fill = PC2), color = "black", size = 0.3) +
+  geom_sf(aes(fill = PC2)) +
   scale_fill_viridis_c() +
   theme_minimal() +
-  labs(title = "Functional PCA - PC2 Scores", fill = "PC2")
+  theme(
+    legend.position = "none",             # togli la legenda se non ti serve
+    axis.text = element_blank(),          # togli etichette assi
+    axis.ticks = element_blank(),         # togli tacche assi
+    panel.grid.major = element_line(color = "transparent"),  # togli la griglia
+    panel.grid.minor = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
 
 grid.arrange(p1, p2, ncol = 2)
 

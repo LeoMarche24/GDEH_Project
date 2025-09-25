@@ -1,5 +1,5 @@
 #############################################
-# Script: Pilot Exposure Calculation (Two Days)
+# Script: Pilot Exposure Calculation (Four Days)
 # Author: Leonardo Marchesin, Ilenia Di Battista
 # Date: 2025
 # Description:
@@ -42,6 +42,8 @@ areas <- read.csv("aree_con_comuni.csv") %>%
 
 time <- unique(presence_data$day)
 
+unique_comuni <- unique(areas$PRO_COM)
+
 #### Function: Calculate Exposure for a Given Day ####
 calculate_exposure <- function(date_string, presence_data, smoothed_field, 
                                coords, areas, municipalities, provinces)
@@ -49,13 +51,13 @@ calculate_exposure <- function(date_string, presence_data, smoothed_field,
   # Filter residents for the chosen day
   residents_day <- presence_data %>%
     group_by(day, area, area_id, latitude, longitude) %>%
-    summarise(unique_users = sum(unique_users), .groups = "drop")
+    summarise(unique_users = sum(unique_users), .groups = "drop") %>%
+    filter(day == as.Date(date_string))
   
   
   smoothed_day <- smoothed_field[, which(time == date_string)]  # assuming same smoothing field applies
   
   # Initialize dataset
-  unique_comuni <- unique(areas$PRO_COM)
   exposure_df <- data.frame(
     comune = unique_comuni,
     smooth_value = rep(0, length(unique_comuni)),
@@ -102,8 +104,6 @@ calculate_exposure <- function(date_string, presence_data, smoothed_field,
     filter(PRO_COM %in% exposure_df$comune) %>%
     left_join(exposure_df, by = c("PRO_COM" = "comune"))
   
-  municipalities_plot$exposure <- log(municipalities_plot$exposure + 1)
-  
   # Provincial aggregation
   province_agg <- exposure_df %>%
     left_join(municipalities_plot[, c("PRO_COM", "COD_PROV")], by = c("comune" = "PRO_COM")) %>%
@@ -119,8 +119,6 @@ calculate_exposure <- function(date_string, presence_data, smoothed_field,
     select(COD_PROV) %>%
     filter(COD_PROV %in% province_agg$COD_PROV) %>%
     left_join(province_agg, by = "COD_PROV")
-  
-  provinces_plot$exp_prov <- log(provinces_plot$exp_prov + 1)
   
   list(
     exposure_df = exposure_df,
@@ -155,13 +153,12 @@ results_jan6 <- calculate_exposure(
 )
 
 #### Plot Results ####
+
 # Municipal level - Day 1
 ggplot(data = results_day1$municipalities_plot) +
   geom_sf(aes(fill = smooth_value)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min(smoothed_field), max(smoothed_field))) +
   theme_minimal() +
-  labs(title = "Smoothed Field by Comune (Dec 13, 2021)",
-       fill = "Smoothed Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -170,12 +167,11 @@ ggplot(data = results_day1$municipalities_plot) +
   geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
 
 # Municipal level - Christmas
+
 ggplot(data = results_christmas$municipalities_plot) +
   geom_sf(aes(fill = smooth_value)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min(smoothed_field), max(smoothed_field))) +
   theme_minimal() +
-  labs(title = "Smoothed Field by Comune (Dec 25, 2021 - Christmas)",
-       fill = "Smoothed Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -187,10 +183,8 @@ ggplot(data = results_christmas$municipalities_plot) +
 
 ggplot(data = results_jan1$municipalities_plot) +
   geom_sf(aes(fill = smooth_value)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min(smoothed_field), max(smoothed_field))) +
   theme_minimal() +
-  labs(title = "Smoothed Field by Comune (Jan 1, 2022 - New Year)",
-       fill = "Smoothed Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -202,10 +196,8 @@ ggplot(data = results_jan1$municipalities_plot) +
 
 ggplot(data = results_jan6$municipalities_plot) +
   geom_sf(aes(fill = smooth_value)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min(smoothed_field), max(smoothed_field))) +
   theme_minimal() +
-  labs(title = "Smoothed Field by Comune (Jan 6, 2022 - Epiphany)",
-       fill = "Smoothed Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -213,15 +205,96 @@ ggplot(data = results_jan6$municipalities_plot) +
   ) +
   geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
 
+## Unique users
+
+min <- log(min(results_day1$municipalities_plot$users, 
+           results_christmas$municipalities_plot$users,
+           results_jan1$municipalities_plot$users,
+           results_jan6$municipalities_plot$users, na.rm = TRUE))
+max <- log(max(results_day1$municipalities_plot$users, 
+           results_christmas$municipalities_plot$users,
+           results_jan1$municipalities_plot$users,
+           results_jan6$municipalities_plot$users, na.rm = TRUE))
+
+# Municipal level - Day 1
+
+ggplot(data = results_day1$municipalities_plot) +
+  geom_sf(aes(fill = log(users))) +
+  scale_fill_viridis_c(limits = c(min, 
+                                  max)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
+
+# Municipal level - Christmas
+
+ggplot(data = results_christmas$municipalities_plot) +
+  geom_sf(aes(fill = log(users))) +
+  scale_fill_viridis_c(limits = c(min, 
+                                  max)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
+
+# Municipal level - Jan 1
+
+ggplot(data = results_jan1$municipalities_plot) +
+  geom_sf(aes(fill = log(users))) +
+  scale_fill_viridis_c(limits = c(min, 
+                                  max)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
+
+# Municipal level - Jan 6
+
+ggplot(data = results_jan6$municipalities_plot) +
+  geom_sf(aes(fill = log(users))) +
+  scale_fill_viridis_c(limits = c(min, 
+                                  max)) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    panel.grid.major = element_line(color = "transparent")
+  ) +
+  geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
+
+# Province level
+
+# Search for max and min exposure province
+
+max_exp_prov <- max(c(
+  results_day1$provinces_plot$exp_prov,
+  results_christmas$provinces_plot$exp_prov,
+  results_jan1$provinces_plot$exp_prov,
+  results_jan6$provinces_plot$exp_prov
+), na.rm = TRUE)
+min_exp_prov <- min(c(
+  results_day1$provinces_plot$exp_prov,
+  results_christmas$provinces_plot$exp_prov,
+  results_jan1$provinces_plot$exp_prov,
+  results_jan6$provinces_plot$exp_prov
+), na.rm = TRUE)
 
 # Provincial level - Day 1
 
 ggplot(data = results_day1$provinces_plot) +
   geom_sf(aes(fill = exp_prov)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min_exp_prov, max_exp_prov)) +
   theme_minimal() +
-  labs(title = "Exposure by Provincia (Dec 13, 2021 - First day)",
-       fill = "Exposure Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -230,12 +303,11 @@ ggplot(data = results_day1$provinces_plot) +
   geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
 
 # Provincial level - Christmas
+
 ggplot(data = results_christmas$provinces_plot) +
   geom_sf(aes(fill = exp_prov)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min_exp_prov, max_exp_prov)) +
   theme_minimal() +
-  labs(title = "Exposure by Provincia (Dec 25, 2021 - Christmas)",
-       fill = "Exposure Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -247,10 +319,8 @@ ggplot(data = results_christmas$provinces_plot) +
 
 ggplot(data = results_jan1$provinces_plot) +
   geom_sf(aes(fill = exp_prov)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min_exp_prov, max_exp_prov)) +
   theme_minimal() +
-  labs(title = "Exposure by Provincia (Jan 1, 2022 - New Year)",
-       fill = "Exposure Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -262,13 +332,13 @@ ggplot(data = results_jan1$provinces_plot) +
 
 ggplot(data = results_jan6$provinces_plot) +
   geom_sf(aes(fill = exp_prov)) +
-  scale_fill_viridis_c() +
+  scale_fill_viridis_c(limits = c(min_exp_prov, max_exp_prov)) +
   theme_minimal() +
-  labs(title = "Exposure by Provincia (Jan 6, 2022 - Epiphany)",
-       fill = "Exposure Value") +
   theme(
     legend.position = "none",
     axis.text = element_blank(),
     panel.grid.major = element_line(color = "transparent")
   ) +
   geom_sf(data = provinces, fill = NA, color = "black", size = 0.5)
+
+# End of Script
