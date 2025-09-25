@@ -230,8 +230,6 @@ pca_exposure$scores[, 2] <- -pca_exposure$scores[, 2]
 
 # Ordering of the provinces in the pca connected with colors
 
-
-
 plot(
   pca_exposure$scores[, 1], pca_exposure$scores[, 2],
   xlab = "PC1", ylab = "PC2",
