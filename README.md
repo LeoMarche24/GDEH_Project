@@ -32,9 +32,8 @@ The folder is divided in two. First, this ReadMe describes the actual structure 
   - `Exposure_1.R` – Script 2: pilot exposure visualization (municipal and provincial)
   - `Exposure_Full.R` – Script 3+4: full time-series analysis and Functional PCA
 
-The folder **smoothing_analysis/** contains all the material to perform the spatial smoothing of the pollutant. 
-
-### Folder structure
+### Smoothing folder structure
+i.e. **smoothing_analysis/**
 
 - **dati_ARPA/**  
   Raw data from ARPA Lombardia including monitoring stations and pollutant concentration values.  
@@ -48,7 +47,7 @@ The folder **smoothing_analysis/** contains all the material to perform the spat
 - **smoothing/**  
   Contains data and results of the smoothing model.
 
-- **results_smoothing/**
+- **results_smoothing/**    (outside of the general smoothing folder for simplicity of execution)
   - `f_eval_fine2.csv` – Smoothed field (pollution values per node and day)
   - `nodes_eval_fine2.csv` – Coordinates of interpolation nodes
 
@@ -96,7 +95,7 @@ To install all packages in one go:
 
 ## Notes
 
-- The raw file `Turismo_Presenza.csv` is **not** included due to size constraints. The analyses rely on the preprocessed file `Data_Presenze.csv`.
+- The raw file `Turismo_Presenza.csv` is **not** included due to size and privacy constraints. The analyses rely on the preprocessed file `Data_Presenze.csv`.
 - QGIS was used to perform **spatial clipping**, **spatial joins**, and **georeferencing checks** for area layers.
 - Functional PCA is applied at the **provincial level** to summarize temporal patterns of exposure.
 - Precise liks for downloading raw data from ARPA Lombardia are below:
@@ -109,6 +108,7 @@ To install all packages in one go:
 
 ## Suggested Workflow for Reviewers
 
+0. Run the procedure in **smoothing_analysis/**. Not reccomanded if not used to the fdapde library.
 1. Run **PreProcessingDataTurismo.R** to build the cleaned dataset (`Data_Presenze.csv`) and pilot CSVs for QGIS.
 2. Run **Exposure_1.R** to verify the pilot exposure maps and aggregation logic.
 3. Run **Exposure_Full.R** to generate the full daily series, perform Functional PCA, and produce all figures used in the report.
