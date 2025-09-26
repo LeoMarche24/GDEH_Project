@@ -9,7 +9,7 @@ The workflow includes:
 4. Analyzing full time series with daily aggregation.
 5. Functional PCA on provincial exposure curves to identify common temporal patterns.
 
-All analyses are conducted in **R**; spatial clipping, spatial joins, and georeferencing checks were additionally performed in **QGIS**.
+The smoothing is perfomed in the **C++** library **fdaPDE**; the analyses are conducted in **R**; spatial clipping, spatial joins, and georeferencing checks were additionally performed in **QGIS**, too.
 
 ---
 
@@ -88,6 +88,9 @@ The folder **smoothing_analysis/** contains all the material to perform the spat
 To install all packages in one go:
 
     install.packages(c("sf", "dplyr", "ggplot2", "tidyr", "fda", "viridis", "gridExtra"))
+
+- **fdaPDE library**
+  installation from GitHub https://github.com/fdaPDE/fdaPDE-cpp
 
 ---
 
