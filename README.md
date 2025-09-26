@@ -13,26 +13,64 @@ All analyses are conducted in **R**; spatial clipping, spatial joins, and georef
 
 ---
 
-## Folder Structure
+## General Folder Structure
+The folder is divided in two. First, this ReadMe describes the actual structure of the analysis of exposure. Secondly, the codes for the smoothing procedure are presented.
 
-- **Geo Data/**
-  - `Compuni_Lombardia.shp` – Shapefile of Lombardy municipalities
-  - `Provincie.shp` – Shapefile of Lombardy provinces
-  - `Data_First_Day_*.csv`, `Data_First_Weekend_*.csv`, `Data_Christmas_*.csv`, `Data_Befana_*.csv` – CSV layers exported for QGIS plotting
-  - Other CSV exports used in QGIS for visualization and checks
-
-- **results_smoothing/**
-  - `f_eval_fine2.csv` – Smoothed field (pollution values per node and day)
-  - `nodes_eval_fine2.csv` – Coordinates of interpolation nodes
+---
 
 - `aree_con_comuni.csv` – Mapping of areas to municipalities (from QGIS spatial join)
 - `Data_Presenze.csv` – Preprocessed presence data used in the analyses
+  
+- **Geo Data/**
+  - `Compuni_Lombardia.shp` – Shapefile of Lombardy municipalities
+  - `Provincie.shp` – Shapefile of Lombardy provinces
+  - `Data_First_Day_*.csv`, `Data_First_Weekend_*.csv`, `Data_Christmas_*.csv`, `Data_Jan06_*.csv` – CSV layers exported for QGIS plotting
+  - Other CSV exports used in QGIS for visualization and checks
 
 - **scripts/**
   - `PreProcessingDataTurismo.R` – Script 1: preprocessing of presence data
   - `Exposure_1.R` – Script 2: pilot exposure visualization (municipal and provincial)
   - `Exposure_Full.R` – Script 3+4: full time-series analysis and Functional PCA
 
+The folder **smoothing_analysis/** contains all the material to perform the spatial smoothing of the pollutant. 
+
+### Folder structure
+
+- **dati_ARPA/**  
+  Raw data from ARPA Lombardia including monitoring stations and pollutant concentration values.  
+
+- **mesh_geospatial/**  
+  Mesh used for model fitting. It represents a reinforced convex hull of the Lombardy region.  
+
+- **mesh_lombardy/**  
+  Mesh of the Lombardy region used for plotting purposes.  
+
+- **smoothing/**  
+  Contains data and results of the smoothing model.
+
+- **results_smoothing/**
+  - `f_eval_fine2.csv` – Smoothed field (pollution values per node and day)
+  - `nodes_eval_fine2.csv` – Coordinates of interpolation nodes
+
+### Files
+
+- **boundary_nodes_lombardy.txt**  
+  Boundary nodes of Lombardy, used for plotting.  
+
+- **geospat_strpde.cpp**  
+  C++ source file implementing the smoothing model, based on the *fdapde* library.  
+
+- **Plot_Data.R**  
+  R script for plotting input data.  
+
+- **Plot_Smoothed_Field.R**  
+  R script for visualising the smoothed pollution field.  
+
+- **PreProcess_ARPA.R**  
+  R script to read raw ARPA data and preprocess it into a format suitable for the smoothing model.  
+
+- **Smoothing_analysis.R**  
+  R script performing the analysis of smoothing results.  
 ---
 
 ## Requirements
@@ -58,6 +96,11 @@ To install all packages in one go:
 - The raw file `Turismo_Presenza.csv` is **not** included due to size constraints. The analyses rely on the preprocessed file `Data_Presenze.csv`.
 - QGIS was used to perform **spatial clipping**, **spatial joins**, and **georeferencing checks** for area layers.
 - Functional PCA is applied at the **provincial level** to summarize temporal patterns of exposure.
+- Precise liks for downloading raw data from ARPA Lombardia are below:
+  
+      1) Download pollution data: https://www.dati.lombardia.it/Ambiente/Dati-sensori-aria-dal-2018/g2hp-ar79/about_data
+  
+      2) Download sensors information: https://www.dati.lombardia.it/Ambiente/Stazioni-qualit-dell-aria/ib47-atvt/about_data
 
 ---
 
